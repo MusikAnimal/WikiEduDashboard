@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 describe 'feedback form' do
+  before do
+    Capybara.current_driver = :poltergeist
+  end
+
   let(:slide_with_feedback_link) do
     '/training/instructors/new-instructor-orientation/new-instructor-orientation-complete'
   end

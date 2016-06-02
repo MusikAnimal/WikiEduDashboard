@@ -3,6 +3,10 @@ require 'rails_helper'
 describe 'onboarding', type: :feature, js: true do
   let(:user) { create(:user, onboarded: onboarded, real_name: 'test', email: 'email@email.com') }
 
+  before do
+    Capybara.current_driver = :poltergeist
+  end
+
   describe 'onboarding redirect checks' do
     describe 'when not logged in' do
       let(:onboarded) { false }

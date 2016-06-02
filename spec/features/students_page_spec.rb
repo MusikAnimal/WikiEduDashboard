@@ -11,6 +11,7 @@ end
 describe 'Students Page', type: :feature, js: true do
   before do
     include Devise::TestHelpers, type: :feature
+    Capybara.current_driver = :poltergeist
 
     allow_any_instance_of(WikiEdits).to receive(:oauth_credentials_valid?).and_return(true)
 

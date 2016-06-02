@@ -2,6 +2,7 @@ require 'rails_helper'
 
 describe 'a user with invalid oauth credentials', type: :feature do
   before do
+    Capybara.current_driver = :poltergeist
     user = create(:user, wiki_token: 'invalid')
     login_as user
   end

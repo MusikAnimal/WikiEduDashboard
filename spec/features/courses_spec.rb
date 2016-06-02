@@ -10,6 +10,8 @@ end
 
 describe 'the explore page', type: :feature do
   before do
+    Capybara.current_driver = :poltergeist
+
     cohort = Cohort.first
     cohort_two = create(:cohort_two)
 

@@ -9,7 +9,7 @@ describe 'Training', type: :feature, js: true do
 
   before do
     login_as(user, scope: :user)
-    Capybara.current_driver = :selenium
+    Capybara.current_driver = :poltergeist
   end
 
   describe 'root library' do

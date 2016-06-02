@@ -2,7 +2,7 @@ require 'rails_helper'
 
 def set_up_suite
   include Devise::TestHelpers, type: :feature
-  Capybara.current_driver = :selenium
+  Capybara.current_driver = :poltergeist
   page.current_window.resize_to(1920, 1080)
   stub_oauth_edit
 end

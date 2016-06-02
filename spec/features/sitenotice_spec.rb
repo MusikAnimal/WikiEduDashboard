@@ -1,6 +1,10 @@
 require 'rails_helper'
 
 describe 'sitenotice', type: :feature do
+  before do
+    Capybara.current_driver = :poltergeist
+  end
+
   before :each do
     ENV['sitenotice'] = notice
   end

@@ -29,6 +29,7 @@ describe 'the course page', type: :feature, js: true do
   let(:es_wiktionary) { create(:wiki, language: 'es', project: 'wiktionary') }
   before do
     include Devise::TestHelpers, type: :feature
+    Capybara.current_driver = :poltergeist
     page.current_window.resize_to(1920, 1080)
 
     course = create(:course,
