@@ -2,6 +2,8 @@
 
 # This script backs up the DB_NAME database into the specified BACKUP_PATH
 #   and syncs it to REMOTE_USER_HOST under the same path
+# Configure crontab like so:
+#   0 0 * * 0 sh APP_ROOT/server_config/outreach_mysql_backup.sh
 
 ### configuration ###
 
