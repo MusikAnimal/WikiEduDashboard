@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'rails_helper'
 require "#{Rails.root}/lib/errors/rescue_development_errors"
 
@@ -21,23 +22,24 @@ describe Errors::RescueDevelopmentErrors, type: :controller do
     end
 
     it 'renders an explanation with helpful advice' do
-      get :index
-      expect(response.body).to match(/gulp/)
+      # In development environment, this renders the page.
+      # In test environment, it raises an error with the explanation
+      expect { get :index }.to raise_error(/gulp/)
     end
   end
 
-  describe 'when CoursesPresenter::NoCohortError is raised' do
+  describe 'when CoursesPresenter::NoCampaignError is raised' do
     controller(ApplicationController) do
       include Errors::RescueDevelopmentErrors
 
       def index
-        raise CoursesPresenter::NoCohortError
+        raise CoursesPresenter::NoCampaignError
       end
     end
 
     it 'renders an explanation with helpful advice' do
       get :index
-      expect(response.body).to match(/default cohort/)
+      expect(response.body).to match(/default campaign/)
     end
   end
 end

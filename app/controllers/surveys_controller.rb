@@ -1,34 +1,34 @@
 # frozen_string_literal: true
-class SurveysController < ApplicationController
-  layout 'surveys_minimal', only: [:show]
-  layout 'application', only: [:optout]
 
+class SurveysController < ApplicationController
   helper Rapidfire::ApplicationHelper
   include CourseHelper
   include SurveysHelper
   include QuestionGroupsHelper
 
-  before_action :require_admin_permissions, except: [:show]
-  before_action :set_survey, only: [
-    :show,
-    :optout,
-    :edit,
-    :update,
-    :destroy,
-    :edit_question_groups,
-    :course_select,
-    :results
+  before_action :require_admin_permissions, except: %i[show optout]
+  before_action :set_survey, only: %i[
+    show
+    optout
+    edit
+    update
+    destroy
+    edit_question_groups
+    course_select
+    results
   ]
   before_action :ensure_logged_in
-  before_action :set_question_groups, only: [
-    :show,
-    :edit,
-    :edit_question_groups,
-    :results
+  before_action :set_question_groups, only: %i[
+    show
+    edit
+    edit_question_groups
+    results
   ]
   before_action :check_if_closed, only: [:show]
   before_action :set_notification, only: [:show]
-  before_action :set_course_for_survey, only: [:show]
+
+  # via SurveysHelper
+  before_action :set_course, only: [:show]
 
   # GET /surveys
   # GET /surveys.json
@@ -54,7 +54,6 @@ class SurveysController < ApplicationController
   # GET /surveys/1
   # GET /surveys/1.json
   def show
-    @courses = Course.all
     unless validate_user_for_survey
       redirect_to(main_app.root_path,
                   flash: { notice: 'Sorry, You do not have access to this survey' })
@@ -65,10 +64,12 @@ class SurveysController < ApplicationController
     # the surveys and puts all questions on display at once, but it is gets
     # around the accessibility probems.
     @accessibility_mode = true if params['accessibility'] == 'true'
-    render 'show'
+    filter_inapplicable_question_groups
+    render layout: 'surveys_minimal'
   end
 
   def optout
+    render layout: 'application'
   end
 
   def course_select
@@ -81,12 +82,10 @@ class SurveysController < ApplicationController
   end
 
   # GET /surveys/1/edit
-  def edit
-  end
+  def edit; end
 
   # GET /surveys/1/question_group
-  def edit_question_groups
-  end
+  def edit_question_groups; end
 
   # POST /surveys
   # POST /surveys.json
@@ -117,13 +116,6 @@ class SurveysController < ApplicationController
       format.html { redirect_to surveys_url, notice: 'Survey was successfully destroyed.' }
       format.json { head :no_content }
     end
-  end
-
-  def clone
-    clone = Survey.find(params[:id]).deep_clone include: [:rapidfire_question_groups]
-    clone.name = "#{clone.name} (Copy)"
-    clone.save
-    redirect_to surveys_path
   end
 
   def clone_question_group
@@ -160,6 +152,17 @@ class SurveysController < ApplicationController
     @surveys_question_groups = SurveysQuestionGroup.by_position(params[:id])
   end
 
+  # This removes the question groups that do not apply to the course, because
+  # of the 'tags' parameter that makes the question group apply only to courses
+  # with (all) those tags, or to courses in all the specified campaigns.
+  def filter_inapplicable_question_groups
+    @surveys_question_groups.select! do |survey_question_group|
+      next false if survey_question_group.question_group.questions.empty?
+      # via QuestionGroupsHelper
+      course_meets_conditions_for_question_group?(survey_question_group.question_group)
+    end
+  end
+
   # Never trust parameters from the scary internet, only allow the white list through.
   def survey_params
     params.require(:survey).permit(:name,
@@ -179,7 +182,7 @@ class SurveysController < ApplicationController
   end
 
   def user_is_assigned_to_survey(return_notification = false)
-    notifications = current_user.survey_notifications.collect do |n|
+    notifications = current_user.survey_notifications.select do |n|
       n if n.survey.id == @survey.id
     end
     return false if notifications.empty?
@@ -199,16 +202,6 @@ class SurveysController < ApplicationController
 
   def set_notification
     @notification = user_is_assigned_to_survey(true)
-  end
-
-  def set_course
-    @course = find_course_by_slug(params[:course_slug]) if course_slug?
-    return unless @course.nil?
-    @course = @notification.course if @notification.instance_of?(SurveyNotification)
-  end
-
-  def course_slug?
-    params.key?(:course_slug)
   end
 
   # Prevents access to survey results if they are set to be confidential
